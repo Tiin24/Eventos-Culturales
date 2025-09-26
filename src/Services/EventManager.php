@@ -43,16 +43,40 @@ class EventManager
      */
     public function add(GlobalEvent $event): void
     {
-        if (empty($event->getTitle()) || empty($event->getPlace()) || empty($event->getDate())) {
-            throw new \InvalidArgumentException("Nombre, lugar y fecha son obligatorios.");
+        // Validar campos obligatorios
+        if (
+            empty($event->getTitle()) ||
+            empty($event->getPlace()) ||
+            empty($event->getDate()) ||
+            empty($event->getTime()) ||
+            empty($event->getCategory()) ||
+            empty($event->getDescription()) ||
+            empty($event->getImageUrl()) ||
+            empty($event->getTags()) ||
+            $event->getCapacity() === null ||
+            $event->getPrice() === null
+        ) {
+            throw new \InvalidArgumentException("Todos los campos son obligatorios.");
         }
 
-        if ($event->getPrice() < 0) {
+        // Validar longitud de descripción
+        if (strlen($event->getDescription()) > 200) {
+            throw new \InvalidArgumentException("La descripción no puede superar los 200 caracteres.");
+        }
+
+        // Validar precio
+        if ($event->getPrice() <= 0) {
             throw new \InvalidArgumentException("El precio no puede ser negativo.");
+        }
+
+        // Validar capacidad
+        if ($event->getCapacity() <= 0) {
+            throw new \InvalidArgumentException("La capacidad debe ser mayor a cero.");
         }
 
         $this->events[] = $event;
     }
+
 
     /**
      * Actualiza un evento por índice (posición en el array)
@@ -103,13 +127,48 @@ class EventManager
      */
     public function updateById(string $id, GlobalEvent $updatedEvent): void
     {
+        // Validar campos obligatorios
+        if (
+            empty($updatedEvent->getTitle()) ||
+            empty($updatedEvent->getPlace()) ||
+            empty($updatedEvent->getDate()) ||
+            empty($updatedEvent->getTime()) ||
+            empty($updatedEvent->getCategory()) ||
+            empty($updatedEvent->getDescription()) ||
+            empty($updatedEvent->getImageUrl()) ||
+            empty($updatedEvent->getTags()) ||
+            $updatedEvent->getCapacity() === null ||
+            $updatedEvent->getPrice() === null
+        ) {
+            throw new \InvalidArgumentException("Todos los campos son obligatorios.");
+        }
+
+        // Validar longitud de descripción
+        if (strlen($updatedEvent->getDescription()) > 200) {
+            throw new \InvalidArgumentException("La descripción no puede superar los 200 caracteres.");
+        }
+
+        // Validar precio
+        if ($updatedEvent->getPrice() < 0) {
+            throw new \InvalidArgumentException("El precio no puede ser negativo.");
+        }
+
+        // Validar capacidad
+        if ($updatedEvent->getCapacity() <= 0) {
+            throw new \InvalidArgumentException("La capacidad debe ser mayor a cero.");
+        }
+
+        // Buscar y actualizar el evento
         foreach ($this->events as $index => $event) {
             if ($event->getId() === $id) {
                 $this->events[$index] = $updatedEvent;
                 return;
             }
         }
+
+        throw new \RuntimeException("Evento con ID {$id} no encontrado.");
     }
+
 
     /**
      * Elimina todos los eventos almacenados

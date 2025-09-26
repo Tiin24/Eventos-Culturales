@@ -63,9 +63,17 @@
         </div>
 
         <!-- Description -->
-        <p class="text-gray-600 mb-4 line-clamp-2">
-            <?= htmlspecialchars($event->getDescription()) ?>
-        </p>
+        <div class="relative max-w-md">
+            <p class="text-gray-600 mb-4 overflow-hidden break-words transition-all duration-300 ease-in-out line-clamp-2" id="desc-<?= $event->getId() ?>">
+                <?= htmlspecialchars($event->getDescription()) ?>
+            </p>
+            <?php if (strlen($event->getDescription()) > 100): ?>
+                <button class="text-blue-600 font-semibold hover:underline text-sm" onclick="toggleDescription('<?= $event->getId() ?>', this)">
+                    Leer más
+                </button>
+            <?php endif; ?>
+        </div>
+
 
         <!-- Event Details Grid -->
         <div class="grid grid-cols-2 gap-3 mb-4">

@@ -108,6 +108,7 @@
 <?php include 'views/components/modals/modalEdit.php'; ?>
 
 <!-- Scripts -->
+<script src="public/js/toggle.js"></script>
 <script src="/public/js/modalEdit.js"></script>
 <script src="/public/js/modal.js"></script>
 </body>

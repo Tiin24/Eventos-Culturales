@@ -82,69 +82,76 @@ switch ($action) {
         break;
 
     case 'store':
-        // Procesa el formulario de creación de evento
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $categoryId = (int) $_POST['category'];
-            $category = $categories[$categoryId] ?? new Category($categoryId, 'Categoría genérica');
+            try {
+                $categoryId = (int) $_POST['category'];
+                $category = $categories[$categoryId] ?? new Category($categoryId, 'Categoría genérica');
 
-            // Crea el nuevo evento con los datos del formulario
-            $event = new Event(
-                id: uniqid(),
-                title: $_POST['title'],
-                place: $_POST['place'],
-                date: $_POST['date'],
-                time: $_POST['time'],
-                category: $category,
-                description: $_POST['description'],
-                imageUrl: $_POST['imageUrl'],
-                capacity: $_POST['capacity'],
-                price: $_POST['price'],
-                tags: explode(',', $_POST['tags'])
-            );
+                $event = new Event(
+                    id: uniqid(),
+                    title: $_POST['title'],
+                    place: $_POST['place'],
+                    date: $_POST['date'],
+                    time: $_POST['time'],
+                    category: $category,
+                    description: $_POST['description'],
+                    imageUrl: $_POST['imageUrl'],
+                    capacity: $_POST['capacity'],
+                    price: $_POST['price'],
+                    tags: explode(',', $_POST['tags'])
+                );
 
-            // Agrega el evento al gestor y actualiza la sesión
-            $eventManager->add($event);
-            $_SESSION['eventManager'] = $eventManager;
-            $_SESSION['success'] = '✅ Evento creado correctamente.';
-            // Redirige al listado
-            header('Location: index.php');
-            exit;
+                $eventManager->add($event);
+                $_SESSION['eventManager'] = $eventManager;
+                $_SESSION['success'] = '✅ Evento creado correctamente.';
+                header('Location: index.php');
+                exit;
+            } catch (\InvalidArgumentException $e) {
+                $_SESSION['error'] = '⚠️ ' . $e->getMessage();
+                header('Location: index.php');
+                exit;
+            }
         }
         break;
+
 
     case 'update':
-        // Procesa el formulario de edición de evento
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id = $_POST['id'];
-            $categoryId = (int) $_POST['category'];
-            $category = $categories[$categoryId] ?? new Category($categoryId, 'Categoría genérica');
+            try {
+                $id = $_POST['id'];
+                $categoryId = (int) $_POST['category'];
+                $category = $categories[$categoryId] ?? new Category($categoryId, 'Categoría genérica');
 
-            // Crea el evento actualizado
-            $updatedEvent = new Event(
-                id: $id,
-                title: $_POST['title'],
-                place: $_POST['place'],
-                date: $_POST['date'],
-                time: $_POST['time'],
-                category: $category,
-                description: $_POST['description'],
-                imageUrl: $_POST['imageUrl'],
-                capacity: $_POST['capacity'],
-                price: $_POST['price'],
-                tags: explode(',', $_POST['tags'])
-            );
+                $updatedEvent = new Event(
+                    id: $id,
+                    title: $_POST['title'],
+                    place: $_POST['place'],
+                    date: $_POST['date'],
+                    time: $_POST['time'],
+                    category: $category,
+                    description: $_POST['description'],
+                    imageUrl: $_POST['imageUrl'],
+                    capacity: $_POST['capacity'],
+                    price: $_POST['price'],
+                    tags: explode(',', $_POST['tags'])
+                );
 
-            // Actualiza el evento en el gestor
-            $eventManager->updateById($id, $updatedEvent);
-            $_SESSION['eventManager'] = $eventManager;
-            $_SESSION['success'] = '✅ Evento actualizado correctamente.';
-
-            // Redirige al listado
-            header('Location: index.php');
-            exit;
+                $eventManager->updateById($id, $updatedEvent);
+                $_SESSION['eventManager'] = $eventManager;
+                $_SESSION['success'] = '✅ Evento actualizado correctamente.';
+                header('Location: index.php');
+                exit;
+            } catch (\InvalidArgumentException $e) {
+                $_SESSION['error'] = '⚠️ ' . $e->getMessage();
+                header('Location: index.php?action=edit&id=' . $_POST['id']);
+                exit;
+            } catch (\RuntimeException $e) {
+                $_SESSION['error'] = '⚠️ ' . $e->getMessage();
+                header('Location: index.php');
+                exit;
+            }
         }
         break;
-
     case 'delete':
         // Procesa la eliminación de un evento
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
