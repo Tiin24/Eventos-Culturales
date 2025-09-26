@@ -39,8 +39,9 @@
 
     <div class="flex flex-col mb-4">
         <label class="mb-1 font-semibold">Precio</label>
-        <input type="number" step="0.01" name="price">
+        <input type="number" step="0.01" min="0" name="price" placeholder="Precio" required>
     </div>
+
 
     <div class="flex flex-col mb-4">
         <label class="mb-1 font-semibold">Capacidad</label>

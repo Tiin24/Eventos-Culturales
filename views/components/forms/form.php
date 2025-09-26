@@ -40,23 +40,24 @@
 
     <div class="flex flex-col mb-4">
         <label class="mb-1 font-semibold">Precio</label>
-        <input type="number" step="0.00" name="price" placeholder="Precio">
+        <input type="number" step="0.01" min="0" name="price" placeholder="Precio" required>
     </div>
+
 
     <div class="flex flex-col mb-4">
         <label class="mb-1 font-semibold">Capacidad</label>
-        <input type="number" name="capacity" placeholder="Capacidad">
+        <input type="number" name="capacity" placeholder="Capacidad" required>
     </div>
 
     <div class="flex flex-col mb-4">
         <label class="mb-1 font-semibold">Etiquetas (separadas por comas)</label>
-        <input type="text" name="tags" placeholder="Tags separados por coma">
+        <input type="text" name="tags" placeholder="Tags separados por coma" required>
     </div>
 
 
     <div>
         <label class="mb-1 font-semibold">URL imagen</label>
-        <input type="url" name="imageUrl" placeholder="URL de imagen">
+        <input type="url" name="imageUrl" placeholder="URL de imagen" required>
     </div>
     <div class="flex justify-end gap-2">
         <button type="button" id="btnCloseAddModal" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>

@@ -1,3 +1,33 @@
 body {
   font-family: 'Raleway', sans-serif;
 }
+
+/* Toast base */
+.toast {
+  @apply flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white font-semibold transition-opacity duration-500 ease-in-out;
+}
+
+/* Tipos de toast */
+.toast-success {
+  @apply bg-green-600;
+}
+
+.toast-error {
+  @apply bg-red-600;
+}
+
+/* Animación de entrada */
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.4s ease-out;
+}

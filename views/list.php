@@ -10,7 +10,10 @@
     <hr class="my-6 border-t w-[60%] border-gray-300">
 </div>
 
-<?php include __DIR__ . '/components/filter.php'; ?>
+<div class="flex justify-center mb-6">
+
+    <?php include __DIR__ . '/components/filter.php'; ?>
+</div>
 
 <div class="flex flex-wrap justify-center gap-6 px-4 mb-10">
     <?php foreach ($events as $index => $event): ?>

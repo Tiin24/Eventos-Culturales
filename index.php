@@ -1,72 +1,93 @@
 <?php
 
+// Carga archivos base y modelos necesarios
 require_once __DIR__ . '/config/bootstrap.php';
 require_once __DIR__ . '/src/Models/Category.php';
 require_once __DIR__ . '/src/Models/Event.php';
-
-// Agregá esto al principio del archivo
+require_once __DIR__ . '/src/Modules/EventModule.php';
+// Inicia la sesión para mantener el estado entre peticiones
 session_start();
 // session_destroy();
 // session_start();
 
-use Src\Services\EventManager;
+use Src\Modules\EventsModule;
 
+// Si no hay datos en sesión, carga los eventos y categorías de ejemplo
 if (!isset($_SESSION['eventManager']) || !isset($_SESSION['categories'])) {
-    $data = require __DIR__ . '/data/sampleEvents.php';
-    $_SESSION['eventManager'] = new EventManager($data['events']);
-    $_SESSION['categories'] = $data['categories'];
+    $module = new EventsModule();
+    $module->install();
+
+    $_SESSION['eventManager'] = $module->getEventManager();
+    $_SESSION['categories'] = $module->getCategories();
 }
 
+if (isset($_GET['action']) && $_GET['action'] === 'uninstall') {
+    $module = new EventsModule();
+    $module->uninstall();
+    $_SESSION['eventManager'] = $module->getEventManager();
+    $_SESSION['categories'] = $module->getCategories();
+    $_SESSION['success'] = '🧹 Módulo desinstalado correctamente.';
+    header('Location: index.php');
+    exit;
+}
 
+// Recupera el gestor de eventos y las categorías desde la sesión
 $eventManager = $_SESSION['eventManager'];
 $categories = $_SESSION['categories'];
 
-// Acción actual
+// Determina la acción actual (listado, agregar, editar, etc.)
 $action = $_GET['action'] ?? 'list';
 
-// Header
+// Carga el encabezado HTML
 include __DIR__ . '/views/components/header.php';
 
+// Captura filtros desde la URL
 $search = strtolower($_GET['search'] ?? '');
 $categoryFilter = $_GET['category'] ?? '';
 $order = $_GET['order'] ?? 'asc';
+$showUpcoming = isset($_GET['upcoming']) && $_GET['upcoming'] === '1';
 
-$filteredEvents = array_filter($eventManager->getAll(), function ($event) use ($search, $categoryFilter) {
+// Aplica filtro de eventos futuros si corresponde
+$baseEvents = $showUpcoming
+    ? $eventManager->getUpcoming()
+    : $eventManager->getAll();
+
+// Filtra eventos por búsqueda y categoría
+$filteredEvents = array_filter($baseEvents, function ($event) use ($search, $categoryFilter) {
     $matchSearch = $search === '' || str_contains(strtolower($event->getTitle() . ' ' . $event->getDescription()), $search);
     $matchCategory = $categoryFilter === '' || $event->getCategory()->getId() == $categoryFilter;
     return $matchSearch && $matchCategory;
 });
 
-// Ordenar por fecha
+// Ordena los eventos por fecha (ascendente o descendente)
 usort($filteredEvents, function ($a, $b) use ($order) {
     $dateA = strtotime($a->getDate());
     $dateB = strtotime($b->getDate());
     return $order === 'asc' ? $dateA - $dateB : $dateB - $dateA;
 });
 
-$eventsPerPage = 6; // o el número que prefieras
+// Configura paginación
+$eventsPerPage = 6;
 $page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
-$allEvents = $filteredEvents;
-$totalEvents = count($allEvents);
+$totalEvents = count($filteredEvents);
 $totalPages = ceil($totalEvents / $eventsPerPage);
-
 $startIndex = ($page - 1) * $eventsPerPage;
-$events = array_slice($allEvents, $startIndex, $eventsPerPage);
+$events = array_slice($filteredEvents, $startIndex, $eventsPerPage);
 
-// Routing
+// Enrutamiento según la acción solicitada
 switch ($action) {
     case 'add':
-        // Mostrar formulario (puede estar en modal o en página)
+        // Muestra el formulario para agregar un nuevo evento
         include __DIR__ . '/views/components/forms/form.php';
         break;
 
     case 'store':
-        // Procesar formulario
+        // Procesa el formulario de creación de evento
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $categoryId = (int) $_POST['category'];
             $category = $categories[$categoryId] ?? new Category($categoryId, 'Categoría genérica');
 
-
+            // Crea el nuevo evento con los datos del formulario
             $event = new Event(
                 id: uniqid(),
                 title: $_POST['title'],
@@ -81,20 +102,24 @@ switch ($action) {
                 tags: explode(',', $_POST['tags'])
             );
 
+            // Agrega el evento al gestor y actualiza la sesión
             $eventManager->add($event);
             $_SESSION['eventManager'] = $eventManager;
+            $_SESSION['success'] = '✅ Evento creado correctamente.';
+            // Redirige al listado
             header('Location: index.php');
             exit;
         }
         break;
 
-
     case 'update':
+        // Procesa el formulario de edición de evento
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = $_POST['id'];
             $categoryId = (int) $_POST['category'];
             $category = $categories[$categoryId] ?? new Category($categoryId, 'Categoría genérica');
 
+            // Crea el evento actualizado
             $updatedEvent = new Event(
                 id: $id,
                 title: $_POST['title'],
@@ -109,33 +134,45 @@ switch ($action) {
                 tags: explode(',', $_POST['tags'])
             );
 
+            // Actualiza el evento en el gestor
             $eventManager->updateById($id, $updatedEvent);
             $_SESSION['eventManager'] = $eventManager;
             $_SESSION['success'] = '✅ Evento actualizado correctamente.';
 
+            // Redirige al listado
             header('Location: index.php');
             exit;
         }
         break;
 
-
-
     case 'delete':
+        // Procesa la eliminación de un evento
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $index = $_POST['index'];
-            $eventManager->delete($index);
-            $_SESSION['eventManager'] = $eventManager;
+            $id = $_POST['id'];
+            $events = $eventManager->getAll();
+
+            // Busca el evento por ID y lo elimina
+            foreach ($events as $index => $event) {
+                if ($event->getId() === $id) {
+                    $eventManager->delete($index);
+                    $_SESSION['eventManager'] = $eventManager;
+                    $_SESSION['success'] = '🗑️ Evento eliminado correctamente.';
+                    break;
+                }
+            }
+
+            // Redirige al listado
             header('Location: index.php');
             exit;
         }
         break;
 
     default:
+        // Muestra el listado de eventos
         include __DIR__ . '/views/list.php';
         break;
 }
 
-// Social
+// Carga componentes adicionales
 include __DIR__ . '/views/components/social.php';
-// Footer
 include __DIR__ . '/views/components/footer.php';
